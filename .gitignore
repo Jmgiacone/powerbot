@@ -169,3 +169,5 @@ pip-log.txt
 *.name
 
 *.jar
+
+*.class
