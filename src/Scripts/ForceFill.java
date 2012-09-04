@@ -42,14 +42,24 @@ import org.powerbot.game.bot.event.MessageEvent;
 import org.powerbot.game.bot.event.listener.MessageListener;
 import org.powerbot.game.bot.event.listener.PaintListener;
 
-@Manifest(authors = "Jdog653, 9Ox", version = 0.02, description = "Fills Vials, Jugs, and Buckets quickly and Efficiently", name = "Force Filler")
+@Manifest(authors = "Jdog653, 9Ox", version = 0.03, description = "Fills Vials, Jugs, and Buckets quickly and Efficiently", name = "Force Filler",
+website = "http://www.powerbot.org/community/topic/750556-force-filler-fills-vialsjugsbucketsbowls-in-3-locations-60-70k-hr/")
 public class ForceFill extends ActiveScript implements PaintListener,
 		MouseListener, MouseMotionListener 	{
-	
+
+    private Color c = new Color(65, 105, 225, 70),
+            color1 = new Color(51, 102, 255),
+            color2 = new Color(0, 0, 0);
+    private long startTime,averageSoakTime, startSoakTime;
+    private final Image img1 = getImage("http://i.imgur.com/NeVxB.png");
+    private final RenderingHints antialiasing = new RenderingHints(
+            RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+    private final BasicStroke stroke1 = new BasicStroke(1);
+    private final Font font1 = new Font("Arial", 0, 9);
 	//The purpose of this NPC is to turn towards the GE Banker because it's not supported in the Bank private class... stupid RSbot
 	private NPC geBanker;
 	
-	private boolean clay = false;
+	private boolean clay = false, showhide = true, isStarted = false;
 	//Final ID's of all items used in the script
 	public final int VIAL = 229, JUG = 1935, BUCKET = 1925,
 			GE_FOUNTAIN = 47150, FALADOR_FOUNTAIN = 11661,
@@ -62,7 +72,7 @@ public class ForceFill extends ActiveScript implements PaintListener,
 			FULL_VIAL_PRICE = 0, FULL_JUG_PRICE = 0, FULL_BUCKET_PRICE = 0, FULL_PRICE = 0, EMPTY_PRICE = 0, vialCount = 0, 
 			EMPTY_BOWL_PRICE, FULL_BOWL_PRICE, refreshPrices = 0, CLAY_PRICE, WET_CLAY_PRICE;
 	
-	private long averageSoakTime, startSoakTime;
+
 
 	//What's being filled(Bucket, Jug, Vial, Bowl) and the state of the bot
 	private String forcefill = "", botState = "";
@@ -218,19 +228,6 @@ public class ForceFill extends ActiveScript implements PaintListener,
 	    return im;
 	}
 	
-	
-	Color c = new Color(65, 105, 225, 70);
-	long startTime;
-	private final Image img1 = getImage("http://i.imgur.com/NeVxB.png");
-	private final RenderingHints antialiasing = new RenderingHints(
-			RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-	public boolean showhide = true;
-	private final Color color1 = new Color(51, 102, 255);
-	private final Color color2 = new Color(0, 0, 0);
-	private final BasicStroke stroke1 = new BasicStroke(1);
-	private final Font font1 = new Font("Arial", 0, 9);
-
-	
 	/**
 	 * A recursive algorithm for inserting commas into a given number
 	 * @param x The number to be comma-ized
@@ -269,30 +266,34 @@ public class ForceFill extends ActiveScript implements PaintListener,
 			
 			refreshPrices = 0;
 		}
-		if (showhide) 
-		{
-			g1.drawImage(img1, 0, 388, null);
-			g1.setColor(Color.BLACK);
-			g1.drawString(forcefill, 200, 487);
-			g1.drawString(hours + ":" + minutes + ":" + seconds, 200, 471);
-			g1.drawString("" + botState, 10, 408);
-			g1.drawString(insertComma(vialCount), 415, 487);
-			g1.drawString("" + (FULL_PRICE - EMPTY_PRICE), 200, 502);
-			g1.drawString(insertComma((FULL_PRICE - EMPTY_PRICE) * vialCount), 415, 471);
-			
-			//Profit per hour = (profit * 3600000d) / timeRan
-			g1.drawString(insertComma((int)((((FULL_PRICE - EMPTY_PRICE) * vialCount) * 3600000d) / (System.currentTimeMillis() - startTime))), 415,502);
-		}
-		g1.setColor(color1);
-		g1.fillRect(6, 509, 85, 15);
-		g1.setColor(color2);
-		((Graphics2D) g1).setStroke(stroke1);
-		g1.drawRect(showHideX, showHideY, showHideWidth, showHideHeight);
-		drawMouse(g1, c);
-		g.setFont(font1);
-		g.drawString("Hide/Show paint", 15, 520);
-		
-		refreshPrices++;
+		if(isStarted)
+        {
+            if (showhide)
+            {
+                g1.drawImage(img1, 0, 388, null);
+                g1.setColor(Color.BLACK);
+                g1.drawString(forcefill, 200, 487);
+                g1.drawString(hours + ":" + minutes + ":" + seconds, 200, 471);
+                g1.drawString("" + botState, 10, 408);
+                g1.drawString(insertComma(vialCount), 415, 487);
+                g1.drawString("" + (FULL_PRICE - EMPTY_PRICE), 200, 502);
+                g1.drawString(insertComma((FULL_PRICE - EMPTY_PRICE) * vialCount), 415, 471);
+
+                //Profit per hour = (profit * 3600000d) / timeRan
+                g1.drawString(insertComma((int)((((FULL_PRICE - EMPTY_PRICE) * vialCount) * 3600000d) / (System.currentTimeMillis() - startTime))), 415,502);
+            }
+
+            g1.setColor(color1);
+            g1.fillRect(6, 509, 85, 15);
+            g1.setColor(color2);
+            ((Graphics2D) g1).setStroke(stroke1);
+            g1.drawRect(showHideX, showHideY, showHideWidth, showHideHeight);
+            drawMouse(g1, c);
+            g.setFont(font1);
+            g.drawString("Hide/Show paint", 15, 520);
+
+            refreshPrices++;
+        }
 	}
 
 	@Override
@@ -793,6 +794,7 @@ private class forcefillgui extends JFrame{
 
 		dispose();
 		startTime = System.currentTimeMillis();
+        isStarted = true;
 		
 
 	}
