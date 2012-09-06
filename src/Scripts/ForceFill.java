@@ -77,7 +77,7 @@ public class ForceFill extends ActiveScript implements PaintListener,
 	//What's being filled(Bucket, Jug, Vial, Bowl) and the state of the bot
 	private String forcefill = "", botState = "";
 
-	//The constants for the Bank areas
+    //The constants for the Bank areas
 	public final static Area GEBANK = new Area(new Tile(3176, 3476, 0), new Tile(
 			3184, 3483, 0)), FBANK = new Area(new Tile(2949, 3372, 0),
 			new Tile(2943, 3368, 0)), VBANK = new Area(new Tile(3257, 3424, 0),

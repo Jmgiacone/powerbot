@@ -70,6 +70,8 @@ public class ForceSand extends ActiveScript
                     new Tile(2545, 3096, 0), 
                     new Tile(2543, 3099, 0), 
                     new Tile(2543, 3102, 0)});
+
+    private String botState;
      @Override
      protected void setup()
      {
@@ -106,7 +108,7 @@ public class ForceSand extends ActiveScript
                 }
             });
 
-// call onCancel() when cross is clicked
+            // call onCancel() when cross is clicked
             setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
             addWindowListener(new WindowAdapter()
             {
@@ -116,7 +118,7 @@ public class ForceSand extends ActiveScript
                 }
             });
 
-// call onCancel() on ESCAPE
+            // call onCancel() on ESCAPE
             contentPane.registerKeyboardAction(new ActionListener()
             {
                 public void actionPerformed(ActionEvent e)
@@ -162,6 +164,8 @@ public class ForceSand extends ActiveScript
         @Override
         public void run() 
         {
+            botState = "Walking back to Bank";
+            System.out.println(botState);
             YANILLE_BANK_TO_SAND_PILE.reverse().traverse();
         }
         
@@ -179,6 +183,8 @@ public class ForceSand extends ActiveScript
         @Override
         public void run() 
         {
+            botState = "Banking" ;
+            System.out.println(botState);
             Bank.open();
             
             if(Bank.isOpen())
@@ -203,7 +209,6 @@ public class ForceSand extends ActiveScript
         public boolean validate()
         {
             return YANILLE_BANK.contains(Players.getLocal().getLocation()) &&
-                    Inventory.getCount(BUCKET_OF_SAND_ID) > 0 &&
                     Inventory.getCount(EMPTY_BUCKET_ID) == 0;
         }
         
@@ -214,6 +219,8 @@ public class ForceSand extends ActiveScript
         @Override
         public void run() 
         {
+            botState = "Walking to Pit";
+            System.out.println(botState);
             YANILLE_BANK_TO_SAND_PILE.traverse();
         }
         
@@ -233,6 +240,8 @@ public class ForceSand extends ActiveScript
         @Override
         public void run() 
         {
+            botState = "Filling Buckets";
+            System.out.println(botState);
             SceneObject sand = SceneEntities.getNearest(SAND_PILE_ID);
             
             for(i = 0; i < 28; i++)
