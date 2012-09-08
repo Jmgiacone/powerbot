@@ -21,11 +21,12 @@ import java.awt.event.*;
  *
  * @author Jordan
  */
-@Manifest(name = "ForceSand", description = "Fills buckets with sand quickly and efficiently for profit", 
+@Manifest(name = "ForceSand", description = "Fills buckets with sand quickly and efficiently for profit",
         authors = {"Jdog653"}, version = 0.01)
 public class ForceSand extends ActiveScript
 {
-    private final int BUCKET_OF_SAND_ID = 0, EMPTY_BUCKET_ID = 0, SAND_PILE_ID = 0;
+    private ForceSandGUI gui;
+    private final int BUCKET_OF_SAND_ID = 1783, EMPTY_BUCKET_ID = 1925, SAND_PILE_ID = 20989;
     private final Area 
             YANILLE_BANK = new Area(
                 new Tile[] {
@@ -71,130 +72,64 @@ public class ForceSand extends ActiveScript
                     new Tile(2543, 3099, 0), 
                     new Tile(2543, 3102, 0)});
 
-    private String botState;
+     private String botState;
      @Override
      protected void setup()
      {
-        ForceSandGUI g = new ForceSandGUI(0.01);
+         provide(new BankItems());
+         provide(new fillBucketsWithSand());
+         provide(new WalkToBank());
+         provide(new walkToSandPit());
+         /*if (gui == null) {
+             SwingUtilities.invokeLater(new Runnable() {
+                 @Override
+                 public void run() {
+                     gui = new ForceSandGUI(0.01);
+                     gui.pack();
+                     gui.setVisible(true);
+                 }
+             });
+         }*/
      }
-     private class ForceSandGUI extends JDialog
-     {
-        private JPanel contentPane;
-        private JButton buttonOK;
-        private JButton buttonCancel;
-        private JComboBox comboBox1;
-        private String location;
-
-        public ForceSandGUI(double ver)
-        {
-            setContentPane(contentPane);
-            setModal(true);
-            setTitle("ForceSand v" + ver);
-            getRootPane().setDefaultButton(buttonOK);
-
-            buttonOK.addActionListener(new ActionListener()
-            {
-                public void actionPerformed(ActionEvent e)
-                {
-                    onOK();
-                }
-            });
-
-            buttonCancel.addActionListener(new ActionListener()
-            {
-                public void actionPerformed(ActionEvent e)
-                {
-                    onCancel();
-                }
-            });
-
-            // call onCancel() when cross is clicked
-            setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
-            addWindowListener(new WindowAdapter()
-            {
-                public void windowClosing(WindowEvent e)
-                {
-                    onCancel();
-                }
-            });
-
-            // call onCancel() on ESCAPE
-            contentPane.registerKeyboardAction(new ActionListener()
-            {
-                public void actionPerformed(ActionEvent e)
-                {
-                    onCancel();
-                }
-            }, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
-        }
-
-        private void onOK()
-        {
-            location = (String)comboBox1.getSelectedItem();
-
-            provide(new BankItems());
-            provide(new fillBucketsWithSand());
-            provide(new WalkToBank());
-            provide(new walkToSandPit());
-            dispose();
-        }
-
-        public String getSandboxLocation()
-        {
-            return location;
-        }
-        private void onCancel()
-        {
-            dispose();
-            stop();
-        }
-
-        private void createUIComponents() {
-            comboBox1 = new JComboBox<String>(new DefaultComboBoxModel<String>(new String[] {
-                    "Dorgesh-Kaan",
-                    "Entrana",
-                    "Rellekka",
-                    "Yanille",
-                    "Zanaris"}));
-        }
-    }
-
     private class WalkToBank extends Strategy implements Runnable
     {
         @Override
-        public void run() 
+        public void run()
         {
             botState = "Walking back to Bank";
             System.out.println(botState);
             YANILLE_BANK_TO_SAND_PILE.reverse().traverse();
         }
-        
+
         @Override
         public boolean validate()
         {
-            return Inventory.getCount(BUCKET_OF_SAND_ID) > 0 &&
+            return !YANILLE_BANK.contains(Players.getLocal().getLocation()) &&
+            Inventory.getCount(BUCKET_OF_SAND_ID) > 0 &&
                     Inventory.getCount(EMPTY_BUCKET_ID) == 0;
         }
     }
-    
+
     private class BankItems extends Strategy implements Runnable
     {
 
         @Override
-        public void run() 
+        public void run()
         {
             botState = "Banking" ;
             System.out.println(botState);
             Bank.open();
-            
+
             if(Bank.isOpen())
             {
                 Bank.depositInventory();
-                
+
                 if(Bank.getItemCount(EMPTY_BUCKET_ID) == 0)
                 {
                     Bank.close();
+                    System.out.println("Finished, no empties left");
                     Game.logout(true);
+                    Time.sleep(500);
                     stop();
                 }
                 else
@@ -204,46 +139,46 @@ public class ForceSand extends ActiveScript
                 }
             }
         }
-        
+
         @Override
         public boolean validate()
         {
             return YANILLE_BANK.contains(Players.getLocal().getLocation()) &&
                     Inventory.getCount(EMPTY_BUCKET_ID) == 0;
         }
-        
+
     }
-    
+
     private class walkToSandPit extends Strategy implements Runnable
     {
         @Override
-        public void run() 
+        public void run()
         {
             botState = "Walking to Pit";
             System.out.println(botState);
             YANILLE_BANK_TO_SAND_PILE.traverse();
         }
-        
+
         @Override
         public boolean validate()
         {
-            return YANILLE_BANK.contains(Players.getLocal().getLocation()) &&
+            return !YANILLE_SAND_PILE.contains(Players.getLocal().getLocation()) &&
                     Inventory.getCount(EMPTY_BUCKET_ID) > 0 &&
                     Inventory.getCount(BUCKET_OF_SAND_ID) == 0;
         }
-        
+
     }
-    
+
     private class fillBucketsWithSand extends Strategy implements Runnable
     {
         int i, checkIdle;
         @Override
-        public void run() 
+        public void run()
         {
             botState = "Filling Buckets";
             System.out.println(botState);
             SceneObject sand = SceneEntities.getNearest(SAND_PILE_ID);
-            
+
             for(i = 0; i < 28; i++)
             {
                 if(Inventory.getItems()[i].getId() == EMPTY_BUCKET_ID)
@@ -251,52 +186,52 @@ public class ForceSand extends ActiveScript
                     break;
                 }
             }
-            
+
             Inventory.getItems()[i].getWidgetChild().click(true);
-            
+
             sand.interact("use");
-            
-            while (Inventory.getCount(EMPTY_BUCKET_ID) > 0) 
+
+            while (Inventory.getCount(EMPTY_BUCKET_ID) > 0)
             {
                 Time.sleep(500);
                 //antiBan();
-                if (Players.getLocal().getAnimation() == -1) 
+                if (Players.getLocal().getAnimation() == -1)
                 {
                         checkIdle++;
                         //antiBan();
                         Time.sleep(500);
-                        if (Players.getLocal().getAnimation() == 895) 
+                        if (Players.getLocal().getAnimation() == 895)
                         {
                                 checkIdle = 0;
                                 //antiBan();
                         }
 
                         // Filling was interrupted, now resuming from last filled item
-                        if (checkIdle > 4) 
+                        if (checkIdle > 8)
                         {
                                 //antiBan();
                                 System.out.println("IDLE");
                                 while (!(Inventory.getItems()[i].getId() == EMPTY_BUCKET_ID))
                                 {
-                                        if (Inventory.getItems()[i].getId() == EMPTY_BUCKET_ID) 
+                                        if (Inventory.getItems()[i].getId() == EMPTY_BUCKET_ID)
                                         {
                                                 System.out.println("match found");
                                                 break;
                                         }
                                         i++;
-                                        
+
                                 }
 
                                 Inventory.getItems()[i].getWidgetChild().click(true);
 
                                 sand.interact("use");
-                                
+
                                 Time.sleep(2000);
                         }
                 }
             }
         }
-        
+
         @Override
         public boolean validate()
         {
@@ -304,6 +239,6 @@ public class ForceSand extends ActiveScript
                     Inventory.getCount(BUCKET_OF_SAND_ID) == 0 &&
                     Inventory.getCount(EMPTY_BUCKET_ID) > 0;
         }
-        
+
     }
 }

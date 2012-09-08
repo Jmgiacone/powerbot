@@ -181,24 +181,38 @@ public class ForceFill extends ActiveScript implements PaintListener,
 	 * Checks the price of the item with the given ID via this website: http://services.runescape.com/m=itemdb_rs/
 	 * @param id The item ID of the wanted item.
 	 * @return The price
-	 * @throws IOException If it's dumb
+	 * @throws IOException If the ID doesn't exist
 	 */
-	private int getPrice(final int id) {
-        try {
-        	final URL url = new URL("http://open.tip.it/json/ge_single_item?item=".concat(Integer.toString(id)));
-            final BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.contains("mark_price")) {
-                        reader.close();
-                        return Integer.parseInt(line.substring(line.indexOf("mark_price") + 13, 
-                          		line.indexOf(",\"daily_gp") - 1).replaceAll(",", ""));
+	private int getPrice(final int id)
+    {
+        String line;
+        try
+        {
+            final URL url = new URL("http://open.tip.it/json/ge_single_item?item=".concat(Integer.toString(id)));
+            final BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(
+                            new URL("http://open.tip.it/json/ge_single_item?item="
+                                    .concat(
+                                    Integer.toString(id))).
+                                    openStream()));
+            while ((line = reader.readLine()) != null)
+            {
+                if (line.contains("mark_price"))
+                {
+                    reader.close();
+                    return Integer.parseInt(line.substring(
+                            line.indexOf("mark_price") + 13,
+                            line.indexOf(",\"daily_gp") - 1)
+                            .replaceAll(",", ""));
                 }
             }
-        } 
-        catch (final Exception e) {
-                return -1;
         }
+        catch (final IOException e)
+        {
+            //Trouble reading the page
+            return -1;
+        }
+        //Item.exists() == false :(
         return -1;
 }
 	
@@ -246,17 +260,8 @@ public class ForceFill extends ActiveScript implements PaintListener,
         
     }
 	
-	public void onRepaint(Graphics g1) {
-		Graphics2D g = (Graphics2D) g1;
-		long millis = System.currentTimeMillis() - startTime;
-		long hours = millis / (1000 * 60 * 60);
-		millis -= hours * (1000 * 60 * 60);
-		long minutes = millis / (1000 * 60);
-		millis -= minutes * (1000 * 60);
-		long seconds = millis / 1000;
-
-		g.setRenderingHints(antialiasing);
-		
+	public void onRepaint(Graphics g1)
+    {
 		//Pulls prices from online every 10,000 repaints
 		if(refreshPrices >= 10000)
 		{
@@ -268,6 +273,14 @@ public class ForceFill extends ActiveScript implements PaintListener,
 		}
 		if(isStarted)
         {
+            Graphics2D g = (Graphics2D) g1;
+            long millis = System.currentTimeMillis() - startTime, hours = millis / (1000 * 60 * 60), minutes, seconds;
+            millis -= hours * (1000 * 60 * 60);
+            minutes = millis / (1000 * 60);
+            millis -= minutes * (1000 * 60);
+            seconds = millis / 1000;
+
+            g.setRenderingHints(antialiasing);
             if (showhide)
             {
                 g1.drawImage(img1, 0, 388, null);
@@ -280,7 +293,8 @@ public class ForceFill extends ActiveScript implements PaintListener,
                 g1.drawString(insertComma((FULL_PRICE - EMPTY_PRICE) * vialCount), 415, 471);
 
                 //Profit per hour = (profit * 3600000d) / timeRan
-                g1.drawString(insertComma((int)((((FULL_PRICE - EMPTY_PRICE) * vialCount) * 3600000d) / (System.currentTimeMillis() - startTime))), 415,502);
+                g1.drawString(insertComma((int)((((FULL_PRICE - EMPTY_PRICE) * vialCount) * 3600000d) /
+                        (System.currentTimeMillis() - startTime))), 415,502);
             }
 
             g1.setColor(color1);
@@ -339,10 +353,14 @@ public class ForceFill extends ActiveScript implements PaintListener,
 		int y = e.getY();
 
 		//g1.drawRect(6, 509, 85, 15); x, y, w, h
-		if (x >= showHideX && x < showHideX + showHideWidth && y >= showHideY && y < showHideY + showHideHeight) {
-			if (showhide) {
+		if (x >= showHideX && x < showHideX + showHideWidth && y >= showHideY && y < showHideY + showHideHeight)
+        {
+			if (showhide)
+            {
 				showhide = false;
-			} else {
+			}
+            else
+            {
 				showhide = true;
 			}
 		}
@@ -372,7 +390,8 @@ public class ForceFill extends ActiveScript implements PaintListener,
 
 	}
 
-	public void drawMouse(Graphics g1, final Color color) {
+	public void drawMouse(Graphics g1, final Color color)
+    {
 		int mouseY = (int) Mouse.getLocation().getY();
 		int mouseX = (int) Mouse.getLocation().getX();
 		g1.drawOval(mouseX - 7, mouseY - 7, 14, 14);
@@ -385,9 +404,11 @@ public class ForceFill extends ActiveScript implements PaintListener,
 	
 
 
-private class BankItems extends Strategy implements Runnable {
+private class BankItems extends Strategy implements Runnable
+{
 	@Override
-	public void run() {
+	public void run()
+    {
 		botState = "BANK_ITEMS";
 		System.out.println(botState);
 
@@ -424,23 +445,25 @@ private class BankItems extends Strategy implements Runnable {
 					Bank.withdraw(emptyID, 0);
 				}
 			}
-			
 		}
 	}
 
-	public boolean validate() {
+	public boolean validate()
+    {
 		return !containsID(Inventory.getItems(), emptyID)
 				&& BANK.contains(Players.getLocal().getLocation());
 	}
 }
-private class WalkToBank extends Strategy implements Runnable {
+private class WalkToBank extends Strategy implements Runnable
+{
 	public boolean validate() {
 		return !containsID(Inventory.getItems(), emptyID)
 				&& !BANK.contains(Players.getLocal().getLocation());
 	}
 
 	@Override
-	public void run() {
+	public void run()
+    {
 		botState = "WALK_TO_BANK";
 		System.out.println(botState);
 		Walking.findPath(BANK_TILE).traverse();
@@ -451,8 +474,7 @@ private class WalkToBank extends Strategy implements Runnable {
 
 private class UseClayOnFountain extends Strategy implements Runnable, MessageListener 
 {
-
-	@Override
+    @Override
 	public void run() 
 	{
 		WidgetChild clayButton = Widgets.get(905, 14);
@@ -470,6 +492,7 @@ private class UseClayOnFountain extends Strategy implements Runnable, MessageLis
 		{
 			Camera.turnTo(fountain);
 		}
+
 		//Algorithm for finding the last filled item in the event that filling is interrupted
 		while (!(Inventory.getItems()[i].getId() == emptyID)) 
 		{
