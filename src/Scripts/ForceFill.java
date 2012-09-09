@@ -306,6 +306,7 @@ public class ForceFill extends ActiveScript implements PaintListener,
             g.setFont(font1);
             g.drawString("Hide/Show paint", 15, 520);
 
+            System.out.println(refreshPrices);
             refreshPrices++;
         }
 	}
