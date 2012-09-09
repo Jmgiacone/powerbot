@@ -42,7 +42,7 @@ import org.powerbot.game.bot.event.MessageEvent;
 import org.powerbot.game.bot.event.listener.MessageListener;
 import org.powerbot.game.bot.event.listener.PaintListener;
 
-@Manifest(authors = "Jdog653, 9Ox", version = 0.03, description = "Fills Vials, Jugs, and Buckets quickly and Efficiently", name = "Force Filler",
+@Manifest(authors = "Jdog653, 9Ox", version = 0.03, description = "Fills Vials, Jugs, Buckets and wets Clay quickly and Efficiently", name = "Force Filler",
 website = "http://www.powerbot.org/community/topic/750556-force-filler-fills-vialsjugsbucketsbowls-in-3-locations-60-70k-hr/")
 public class ForceFill extends ActiveScript implements PaintListener,
 		MouseListener, MouseMotionListener 	{
