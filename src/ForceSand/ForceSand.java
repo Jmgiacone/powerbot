@@ -18,10 +18,6 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-/**
- *
- * @author Jordan
- */
 @Manifest(name = "ForceSand", description = "Fills buckets with sand quickly and efficiently for profit",
         authors = {"Jdog653"}, version = 0.01)
 public class ForceSand extends ActiveScript
