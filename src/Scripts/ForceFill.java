@@ -56,10 +56,8 @@ public class ForceFill extends ActiveScript implements PaintListener,
             RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
     private final BasicStroke stroke1 = new BasicStroke(1);
     private final Font font1 = new Font("Arial", 0, 9);
-	//The purpose of this NPC is to turn towards the GE Banker because it's not supported in the Bank private class... stupid RSbot
-	private NPC geBanker;
-	
-	private boolean clay = false, showhide = true, isStarted = false;
+
+    private boolean clay = false, showhide = true, isStarted = false;
 	//Final ID's of all items used in the script
 	public final int VIAL = 229, JUG = 1935, BUCKET = 1925,
 			GE_FOUNTAIN = 47150, FALADOR_FOUNTAIN = 11661,
@@ -188,7 +186,6 @@ public class ForceFill extends ActiveScript implements PaintListener,
         String line;
         try
         {
-            final URL url = new URL("http://open.tip.it/json/ge_single_item?item=".concat(Integer.toString(id)));
             final BufferedReader reader = new BufferedReader(
                     new InputStreamReader(
                             new URL("http://open.tip.it/json/ge_single_item?item="
@@ -302,7 +299,7 @@ public class ForceFill extends ActiveScript implements PaintListener,
             g1.setColor(color2);
             ((Graphics2D) g1).setStroke(stroke1);
             g1.drawRect(showHideX, showHideY, showHideWidth, showHideHeight);
-            drawMouse(g1, c);
+            drawMouse(g1);
             g.setFont(font1);
             g.drawString("Hide/Show paint", 15, 520);
 
@@ -355,14 +352,7 @@ public class ForceFill extends ActiveScript implements PaintListener,
 		//g1.drawRect(6, 509, 85, 15); x, y, w, h
 		if (x >= showHideX && x < showHideX + showHideWidth && y >= showHideY && y < showHideY + showHideHeight)
         {
-			if (showhide)
-            {
-				showhide = false;
-			}
-            else
-            {
-				showhide = true;
-			}
+            showhide = !showhide;
 		}
 	}
 
@@ -390,7 +380,7 @@ public class ForceFill extends ActiveScript implements PaintListener,
 
 	}
 
-	public void drawMouse(Graphics g1, final Color color)
+	public void drawMouse(Graphics g1)
     {
 		int mouseY = (int) Mouse.getLocation().getY();
 		int mouseX = (int) Mouse.getLocation().getX();
@@ -419,7 +409,7 @@ private class BankItems extends Strategy implements Runnable
 			if (BANK_TILE.equals(GEBANK_TILE)) 
 			{
 				//Turn Camera to the GEBanker because the Bank.open() method is dumb and doesn't include the GE
-				geBanker = NPCs.getNearest(2718);
+                NPC geBanker = NPCs.getNearest(2718);
 				if (!geBanker.isOnScreen()) 
 				{
 					Camera.turnTo(geBanker);
@@ -487,7 +477,7 @@ private class UseClayOnFountain extends Strategy implements Runnable, MessageLis
 		
 
 		final SceneObject fountain = SceneEntities
-				.getNearest(new int[] { fountainID });
+				.getNearest(fountainID);
 
 		if (!fountain.isOnScreen()) 
 		{
@@ -619,7 +609,7 @@ private class UseItemOnFountain extends Strategy implements Runnable {
 		
 
 		final SceneObject fountain = SceneEntities
-				.getNearest(new int[] { fountainID });
+				.getNearest(fountainID);
 
 		if (!fountain.isOnScreen()) {
 			Camera.turnTo(fountain);
@@ -735,72 +725,68 @@ private class forcefillgui extends JFrame{
 	{
 		String chosen = comboBox1.getSelectedItem().toString(), 
 				chosenLoc = comboBox2.getSelectedItem().toString();
-		
-		if (chosen.equals("Vials")) 
-		{
-			emptyID = VIAL;
-			fullID = FULL_VIAL;
-			forcefill = "Vials";
-			FULL_PRICE = FULL_VIAL_PRICE;
-			EMPTY_PRICE = EMPTY_VIAL_PRICE;
-		} 
-		else if (chosen.equals("Jugs")) 
-		{
-			emptyID = JUG;
-			fullID = FULL_JUG;
-			forcefill = "Jugs";
-			FULL_PRICE = FULL_JUG_PRICE;
-			EMPTY_PRICE = EMPTY_JUG_PRICE;
-		} 
-		else if (chosen.equals("Buckets")) 
-		{
-			emptyID = BUCKET;
-			fullID = FULL_BUCKET;
-			forcefill = "Buckets";
-			FULL_PRICE = FULL_BUCKET_PRICE;
-			EMPTY_PRICE = EMPTY_BUCKET_PRICE;
-		} 
-		else if (chosen.equals("Bowls")) 
-		{
-			emptyID = EMPTY_BOWL;
-			fullID = FULL_BOWL;
-			forcefill = "Bowls";
-			FULL_PRICE = FULL_BOWL_PRICE;
-			EMPTY_PRICE = EMPTY_BOWL_PRICE;
-		}
-		else if (chosen.equals("Clay")) 
-		{
-			clay = true;
-			emptyID = CLAY;
-			fullID = WET_CLAY;
-			forcefill = "Clay";
-			FULL_PRICE = WET_CLAY_PRICE;
-			EMPTY_PRICE = CLAY_PRICE;
-		}
-		if (chosenLoc.equals("Varrock (east)")) 
-		{
-			BANK_TILE = VBANK_TILE;
-			fountainID = VARROCK_FOUNTAIN;
-			FOUNTAIN_TILE = VFOUNTAIN_TILE;
-			BANK = VBANK;
-			FOUNTAIN = VFOUNTAIN;
-		} 
-		else if (chosenLoc.equals("GE")) 
-		{
-			BANK_TILE = GEBANK_TILE;
-			fountainID = GE_FOUNTAIN;
-			FOUNTAIN_TILE = GEFOUNTAIN_TILE;
-			BANK = GEBANK;
-			FOUNTAIN = GEFOUNTAIN;
-		} 
-		else if (chosenLoc.equals("Falador")) 
-		{
-			BANK_TILE = FBANK_TILE;
-			fountainID = FALADOR_FOUNTAIN;
-			FOUNTAIN_TILE = FFOUNTAIN_TILE;
-			BANK = FBANK;
-			FOUNTAIN = FFOUNTAIN;
-		}
+
+        switch (chosen) {
+            case "Vials":
+                emptyID = VIAL;
+                fullID = FULL_VIAL;
+                forcefill = "Vials";
+                FULL_PRICE = FULL_VIAL_PRICE;
+                EMPTY_PRICE = EMPTY_VIAL_PRICE;
+                break;
+            case "Jugs":
+                emptyID = JUG;
+                fullID = FULL_JUG;
+                forcefill = "Jugs";
+                FULL_PRICE = FULL_JUG_PRICE;
+                EMPTY_PRICE = EMPTY_JUG_PRICE;
+                break;
+            case "Buckets":
+                emptyID = BUCKET;
+                fullID = FULL_BUCKET;
+                forcefill = "Buckets";
+                FULL_PRICE = FULL_BUCKET_PRICE;
+                EMPTY_PRICE = EMPTY_BUCKET_PRICE;
+                break;
+            case "Bowls":
+                emptyID = EMPTY_BOWL;
+                fullID = FULL_BOWL;
+                forcefill = "Bowls";
+                FULL_PRICE = FULL_BOWL_PRICE;
+                EMPTY_PRICE = EMPTY_BOWL_PRICE;
+                break;
+            case "Clay":
+                clay = true;
+                emptyID = CLAY;
+                fullID = WET_CLAY;
+                forcefill = "Clay";
+                FULL_PRICE = WET_CLAY_PRICE;
+                EMPTY_PRICE = CLAY_PRICE;
+                break;
+        }
+        switch (chosenLoc) {
+            case "Varrock (east)":
+                BANK_TILE = VBANK_TILE;
+                fountainID = VARROCK_FOUNTAIN;
+                FOUNTAIN_TILE = VFOUNTAIN_TILE;
+                BANK = VBANK;
+                FOUNTAIN = VFOUNTAIN;
+                break;
+            case "GE":
+                BANK_TILE = GEBANK_TILE;
+                fountainID = GE_FOUNTAIN;
+                FOUNTAIN_TILE = GEFOUNTAIN_TILE;
+                BANK = GEBANK;
+                FOUNTAIN = GEFOUNTAIN;
+                break;
+            case "Falador":
+                BANK_TILE = FBANK_TILE;
+                fountainID = FALADOR_FOUNTAIN;
+                FOUNTAIN_TILE = FFOUNTAIN_TILE;
+                BANK = FBANK;
+                FOUNTAIN = FFOUNTAIN;
+                break;
+        }
 
 		provide(new WalkToBank());
 		provide(new BankItems());
