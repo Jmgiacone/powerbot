@@ -111,7 +111,6 @@ public class ForceSand extends ActiveScript
                  @Override
                  public void run() {
                      gui = new ForceSandDialog(0.01);
-                     gui.pack();
                      gui.setVisible(true);
                  }
              });
@@ -126,10 +125,10 @@ public class ForceSand extends ActiveScript
         private JLabel locLabel;
         public ForceSandDialog(double ver)
         {
+            init();
+            setModal(true);
             setTitle("ForceSand v" + ver);
             setSize(500,500);
-
-            init();
         }
 
         private void init()

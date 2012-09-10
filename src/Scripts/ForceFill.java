@@ -306,7 +306,6 @@ public class ForceFill extends ActiveScript implements PaintListener,
             g.setFont(font1);
             g.drawString("Hide/Show paint", 15, 520);
 
-            System.out.println(refreshPrices);
             refreshPrices++;
         }
 	}
@@ -440,6 +439,7 @@ private class BankItems extends Strategy implements Runnable
 					System.out.println("Finished, no empties left");
 					Bank.close();
 					Game.logout(true);
+                    stop();
 				} 
 				else 
 				{
