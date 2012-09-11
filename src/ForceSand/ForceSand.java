@@ -15,6 +15,7 @@ import org.powerbot.game.api.wrappers.map.TilePath;
 import org.powerbot.game.api.wrappers.node.SceneObject;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -103,7 +104,7 @@ public class ForceSand extends ActiveScript
      protected void setup()
      {
          if (gui == null) {
-             SwingUtilities.invokeLater(new Runnable() {
+             EventQueue.invokeLater(new Runnable() {
                  @Override
                  public void run() {
                      gui = new ForceSandDialog(0.01);

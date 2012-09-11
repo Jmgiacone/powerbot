@@ -726,7 +726,8 @@ private class forcefillgui extends JFrame{
 		String chosen = comboBox1.getSelectedItem().toString(), 
 				chosenLoc = comboBox2.getSelectedItem().toString();
 
-        switch (chosen) {
+        switch (chosen)
+        {
             case "Vials":
                 emptyID = VIAL;
                 fullID = FULL_VIAL;
@@ -764,7 +765,8 @@ private class forcefillgui extends JFrame{
                 EMPTY_PRICE = CLAY_PRICE;
                 break;
         }
-        switch (chosenLoc) {
+        switch (chosenLoc)
+        {
             case "Varrock (east)":
                 BANK_TILE = VBANK_TILE;
                 fountainID = VARROCK_FOUNTAIN;
