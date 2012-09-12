@@ -65,7 +65,6 @@ public class ForceGranite extends ActiveScript implements PaintListener
      * Checks the price of the item with the given ID via this website: http://services.runescape.com/m=itemdb_rs/
      * @param id The item ID of the wanted item.
      * @return The price
-     * @throws IOException If the ID doesn't exist
      */
     private int getPrice(final int id)
     {
