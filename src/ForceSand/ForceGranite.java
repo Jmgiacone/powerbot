@@ -1,7 +1,11 @@
 package ForceSand;
 
+
 import org.powerbot.concurrent.strategy.Strategy;
-import org.powerbot.game.api.ActiveScript;
+import org.powerbot.core.event.listeners.PaintListener;
+import org.powerbot.core.script.ActiveScript;
+import org.powerbot.core.script.job.Task;
+import org.powerbot.core.script.job.state.Node;
 import org.powerbot.game.api.Manifest;
 import org.powerbot.game.api.methods.Game;
 import org.powerbot.game.api.methods.Widgets;
@@ -9,8 +13,6 @@ import org.powerbot.game.api.methods.input.Mouse;
 import org.powerbot.game.api.methods.interactive.Players;
 import org.powerbot.game.api.methods.tab.Inventory;
 import org.powerbot.game.api.methods.widget.Bank;
-import org.powerbot.game.api.util.Time;
-import org.powerbot.game.bot.event.listener.PaintListener;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -30,11 +32,20 @@ public class ForceGranite extends ActiveScript implements PaintListener
             FIVE_HUNDRED_G_GRANITE_ID = 6979,
             CHISELING_ANIMATION = 11146;
 
-
+    private final Node[] strategies = {new BankItems(), new CrushFiveKGGranite(), new CrushTwoKGGranite()};
     private long startTime = System.currentTimeMillis();
     private final Image mouse = getImage("http://www.rw-designer.com/cursor-view/17047.png");
     private int graniteCount = 0, fiveKgGranitePrice, fiveHundredGGranitePrice;
 
+    public void onStart()
+    {
+        fiveHundredGGranitePrice = getPrice(FIVE_HUNDRED_G_GRANITE_ID);
+        fiveKgGranitePrice = getPrice(FIVE_KG_GRANITE_ID);
+
+        System.out.println("5Kg: " + fiveKgGranitePrice +
+                "\n500g: "+ fiveHundredGGranitePrice +
+                "\nProfit: " + ((10 * fiveHundredGGranitePrice) - fiveKgGranitePrice));
+    }
     private int getFirstInInventory(final int id)
     {
         for(int i = 0; i < Inventory.getItems().length; i++)
@@ -47,22 +58,9 @@ public class ForceGranite extends ActiveScript implements PaintListener
 
         return -1;
     }
-    @Override
-    protected void setup()
-    {
-        fiveHundredGGranitePrice = getPrice(FIVE_HUNDRED_G_GRANITE_ID);
-        fiveKgGranitePrice = getPrice(FIVE_KG_GRANITE_ID);
-
-        System.out.println("5Kg: " + fiveKgGranitePrice +
-                "\n500g: "+ fiveHundredGGranitePrice +
-                "\nProfit: " + ((10 * fiveHundredGGranitePrice) - fiveKgGranitePrice));
-        provide(new CrushFiveKGGranite());
-        provide(new CrushTwoKGGranite());
-        provide(new BankItems());
-    }
 
     /**
-     * Checks the price of the item with the given ID via this website: http://services.runescape.com/m=itemdb_rs/
+     * Checks the price of the item with the given ID via this website: http://services.executeescape.com/m=itemdb_rs/
      * @param id The item ID of the wanted item.
      * @return The price
      */
@@ -130,14 +128,14 @@ public class ForceGranite extends ActiveScript implements PaintListener
             {
                 idle = 0;
                 System.out.println("Chipping");
-                Time.sleep(500, 550);
+                Task.sleep(500, 550);
             }
 
             if(idle > 100000)
             {
                 if(idle == 10001)
                 {
-                    System.out.println("First run, not idling");
+                    System.out.println("First execute, not idling");
                 }
                 else
                 {
@@ -157,7 +155,7 @@ public class ForceGranite extends ActiveScript implements PaintListener
                     System.out.println("Granite Widget is not onscreen\nClicking...");
                     Inventory.getItems()[getFirstInInventory(id)].getWidgetChild().click(true);
                 }
-                Time.sleep(1000, 1050);
+                Task.sleep(1000, 1050);
                 idle = 0;
             }
         }
@@ -217,11 +215,25 @@ public class ForceGranite extends ActiveScript implements PaintListener
         g.drawString("Profit per Hour: " + perHour(((10 * fiveHundredGGranitePrice) - fiveKgGranitePrice), 10), 550, 500);
     }
 
-    private class CrushTwoKGGranite extends Strategy implements Runnable
+    @Override
+    public int loop()
+    {
+        for(Node n : strategies)
+        {
+            if(n.activate())
+            {
+                n.execute();
+            }
+        }
+
+        return 0;
+    }
+
+    private class CrushTwoKGGranite extends Node
     {
 
         @Override
-        public void run()
+        public void execute()
         {
             System.out.println("Crushing 2kg");
 
@@ -231,16 +243,16 @@ public class ForceGranite extends ActiveScript implements PaintListener
             graniteCount += Inventory.getCount(FIVE_HUNDRED_G_GRANITE_ID);
         }
 
-        public boolean validate()
+        public boolean activate()
         {
             return Inventory.getCount(FIVE_KG_GRANITE_ID) == 0&&
                     Inventory.getCount(TWO_KG_GRANITE_ID) > 0;
         }
     }
-    private class CrushFiveKGGranite extends Strategy implements Runnable
+    private class CrushFiveKGGranite extends Node
     {
         @Override
-        public void run()
+        public void execute()
         {
             System.out.println("Crushing 5Kg");
             //Crush ALL the Granite!
@@ -248,23 +260,23 @@ public class ForceGranite extends ActiveScript implements PaintListener
             crushBlock(FIVE_KG_GRANITE_ID);
         }
 
-        public boolean validate()
+        public boolean activate()
         {
             return Inventory.getCount(FIVE_KG_GRANITE_ID) > 0;
         }
     }
-    private class BankItems extends Strategy implements Runnable
+    private class BankItems extends Node
     {
 
         @Override
-        public void run()
+        public void execute()
         {
              System.out.println("Opening Bank");
 
              Bank.open();
              if(Bank.isOpen())
              {
-                 Time.sleep(400, 500);
+                 Task.sleep(400, 500);
                  System.out.println("Banking");
                  Bank.depositInventory();
 
@@ -274,7 +286,7 @@ public class ForceGranite extends ActiveScript implements PaintListener
                      //No 500Kg Granite, stopping script
                      System.out.println("No More 5Kg's, stopping");
                      Bank.close();
-                     Time.sleep(200, 400);
+                     Task.sleep(200, 400);
                      Game.logout(true);
                      stop();
                  }
@@ -284,12 +296,12 @@ public class ForceGranite extends ActiveScript implements PaintListener
                      Bank.withdraw(FIVE_KG_GRANITE_ID, 2);
                  }
 
-                 Time.sleep(250,300);
+                 Task.sleep(250,300);
                  Bank.close();
              }
         }
 
-        public boolean validate()
+        public boolean activate()
         {
             return Inventory.getCount(FIVE_KG_GRANITE_ID) == 0 &&
                     (Inventory.getCount(FIVE_HUNDRED_G_GRANITE_ID) == 20 ||

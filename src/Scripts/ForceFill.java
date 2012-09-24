@@ -18,7 +18,12 @@ import javax.swing.*;
 import java.lang.Runnable;
 
 import org.powerbot.concurrent.strategy.Strategy;
-import org.powerbot.game.api.ActiveScript;
+import org.powerbot.core.event.events.MessageEvent;
+import org.powerbot.core.event.listeners.MessageListener;
+import org.powerbot.core.event.listeners.PaintListener;
+import org.powerbot.core.script.ActiveScript;
+import org.powerbot.core.script.job.Task;
+import org.powerbot.core.script.job.state.Node;
 import org.powerbot.game.api.Manifest;
 import org.powerbot.game.api.methods.Game;
 import org.powerbot.game.api.methods.Walking;
@@ -38,15 +43,13 @@ import org.powerbot.game.api.wrappers.Tile;
 import org.powerbot.game.api.wrappers.interactive.NPC;
 import org.powerbot.game.api.wrappers.node.SceneObject;
 import org.powerbot.game.api.wrappers.widget.WidgetChild;
-import org.powerbot.game.bot.event.MessageEvent;
-import org.powerbot.game.bot.event.listener.MessageListener;
-import org.powerbot.game.bot.event.listener.PaintListener;
 
 @Manifest(authors = "Jdog653, 9Ox", version = 0.03, description = "Fills Vials, Jugs, Buckets and wets Clay quickly and Efficiently", name = "Force Filler",
 website = "http://www.powerbot.org/community/topic/750556-force-filler-fills-vialsjugsbucketsbowls-in-3-locations-60-70k-hr/")
 public class ForceFill extends ActiveScript implements PaintListener,
 		MouseListener, MouseMotionListener 	{
 
+    private Node[] strategies;
     private Color c = new Color(65, 105, 225, 70),
             color1 = new Color(51, 102, 255),
             color2 = new Color(0, 0, 0);
@@ -151,7 +154,7 @@ public class ForceFill extends ActiveScript implements PaintListener,
 				Mouse.move(Random.nextInt(0, 500) + 1,
 						Random.nextInt(0, 500) + 1);
 
-				Time.sleep(200, 600);
+				Task.sleep(200, 600);
 
 				Mouse.move(Random.nextInt(0, 500) + 1,
 						Random.nextInt(0, 500) + 1);
@@ -160,14 +163,14 @@ public class ForceFill extends ActiveScript implements PaintListener,
 		case 2:
 			if (Random.nextInt(0, 13) == 2) {
 				Camera.setAngle(Random.nextInt(0, 360) + 1);
-				Time.sleep(400, 1200);
+				Task.sleep(400, 1200);
 			}
 			break;
 		case 3:
 			if (Random.nextInt(0, 24) == 6) {
 				offScreen();
 
-				Time.sleep(Random.nextInt(600, Random.nextInt(1200, 2000)));
+				Task.sleep(Random.nextInt(600, Random.nextInt(1200, 2000)));
 			}
 			break;
 		default:
@@ -308,7 +311,7 @@ public class ForceFill extends ActiveScript implements PaintListener,
 	}
 
 	@Override
-	protected void setup() 
+	public void onStart()
 	{
 		EMPTY_VIAL_PRICE = getPrice(VIAL);
 		FULL_VIAL_PRICE = getPrice(FULL_VIAL);
@@ -391,13 +394,25 @@ public class ForceFill extends ActiveScript implements PaintListener,
 		g1.fillOval(mouseX - 1, mouseY - 1, 3, 2);
 	}
 
-	
+    @Override
+    public int loop() 
+    {
+        for(Node n : strategies)
+        {
+            if(n.activate())
+            {
+                n.execute();
+            }
+        }
+        
+        return 0;
+    }
 
 
-private class BankItems extends Strategy implements Runnable
+    private class BankItems extends Node
 {
 	@Override
-	public void run()
+	public void execute()
     {
 		botState = "BANK_ITEMS";
 		System.out.println(botState);
@@ -419,7 +434,7 @@ private class BankItems extends Strategy implements Runnable
 			//Open the bank
 			Bank.open();
 			antiBan();
-			Time.sleep(500);
+			Task.sleep(500);
 			
 			if (Bank.isOpen()) 
 			{
@@ -439,34 +454,33 @@ private class BankItems extends Strategy implements Runnable
 		}
 	}
 
-	public boolean validate()
+	public boolean activate()
     {
 		return !containsID(Inventory.getItems(), emptyID)
 				&& BANK.contains(Players.getLocal().getLocation());
 	}
 }
-private class WalkToBank extends Strategy implements Runnable
+private class WalkToBank extends Node
 {
-	public boolean validate() {
+	public boolean activate() {
 		return !containsID(Inventory.getItems(), emptyID)
 				&& !BANK.contains(Players.getLocal().getLocation());
 	}
 
 	@Override
-	public void run()
+	public void execute()
     {
 		botState = "WALK_TO_BANK";
 		System.out.println(botState);
 		Walking.findPath(BANK_TILE).traverse();
 		antiBan();
-		Time.sleep(500);
+		Task.sleep(500);
 	}
 }
 
-private class UseClayOnFountain extends Strategy implements Runnable, MessageListener 
-{
+private class UseClayOnFountain extends Node implements MessageListener {
     @Override
-	public void run() 
+	public void execute() 
 	{
 		WidgetChild clayButton = Widgets.get(905, 14);
 		startSoakTime = System.currentTimeMillis();
@@ -497,7 +511,7 @@ private class UseClayOnFountain extends Strategy implements Runnable, MessageLis
 		}
 		
 		Inventory.getItems()[i].getWidgetChild().click(true);
-		Time.sleep(Random.nextInt(100, 200));
+		Task.sleep(Random.nextInt(100, 200));
 		
 		if (FOUNTAIN_TILE.equals(FFOUNTAIN_TILE)) 
 		{
@@ -521,7 +535,7 @@ private class UseClayOnFountain extends Strategy implements Runnable, MessageLis
 			{
 				checkIdle++;
 				antiBan();
-				Time.sleep(500);
+				Task.sleep(500);
 			}	
 			else
 			{
@@ -563,14 +577,14 @@ private class UseClayOnFountain extends Strategy implements Runnable, MessageLis
 							forcefill.length()) + " -> Fountain");
 				}
 					
-				Time.sleep(Random.nextInt(100, 200));
+				Task.sleep(Random.nextInt(100, 200));
 					
 				
 				System.out.println("Clicking Button");
 				Mouse.click(clayButton.getAbsoluteX() + Random.nextInt(0, clayButton.getWidth()), 
 						clayButton.getAbsoluteY() + Random.nextInt(0, clayButton.getHeight()), true);
 				startSoakTime = System.currentTimeMillis();
-				Time.sleep(2000);
+				Task.sleep(2000);
 			}
 		}
 		
@@ -595,14 +609,14 @@ private class UseClayOnFountain extends Strategy implements Runnable, MessageLis
 	
 		
 	}
-	public boolean validate() {
+	public boolean activate() {
 		return containsID(Inventory.getItems(), emptyID)
 				&& FOUNTAIN.contains(Players.getLocal().getLocation());
 	}
 }
-private class UseItemOnFountain extends Strategy implements Runnable {
+private class UseItemOnFountain extends Node {
 	@Override
-	public void run() {
+	public void execute() {
 		int checkIdle = 0, i = 0;
 		botState = "FILL_EMPTY";
 		System.out.println(botState);
@@ -624,7 +638,7 @@ private class UseItemOnFountain extends Strategy implements Runnable {
 			}
 		}
 		Inventory.getItems()[i].getWidgetChild().click(true);
-		Time.sleep(Random.nextInt(100, 200));
+		Task.sleep(Random.nextInt(100, 200));
 		
 		if (FOUNTAIN_TILE.equals(FFOUNTAIN_TILE)) 
 		{
@@ -638,12 +652,12 @@ private class UseItemOnFountain extends Strategy implements Runnable {
 		}
 		
 		while (containsID(Inventory.getItems(), emptyID)) {
-			Time.sleep(500);
+			Task.sleep(500);
 			antiBan();
 			if (Players.getLocal().getAnimation() == -1) {
 				checkIdle++;
 				antiBan();
-				Time.sleep(500);
+				Task.sleep(500);
 				if (Players.getLocal().getAnimation() == 832) {
 					checkIdle = 0;
 					antiBan();
@@ -674,7 +688,7 @@ private class UseItemOnFountain extends Strategy implements Runnable {
 								forcefill.length()) + " -> Fountain");
 					}
 					
-					Time.sleep(2000);
+					Task.sleep(2000);
 				}
 			}
 		}
@@ -687,7 +701,7 @@ private class UseItemOnFountain extends Strategy implements Runnable {
 		}
 	}
 
-	public boolean validate() {
+	public boolean activate() {
 		return containsID(Inventory.getItems(), emptyID)
 				&& FOUNTAIN.contains(Players.getLocal().getLocation());
 	}
@@ -696,18 +710,18 @@ private class UseItemOnFountain extends Strategy implements Runnable {
 
 }
 
-private class WalkToFountain extends Strategy implements Runnable {
+private class WalkToFountain extends Node {
 	@Override
-	public void run() {
+	public void execute() {
 		botState = "WALK_TO_FOUNTAIN";
 		
 		System.out.println(botState);
 		Walking.findPath(FOUNTAIN_TILE).traverse();
 		antiBan();
-		Time.sleep(500);
+		Task.sleep(500);
 	}
 
-	public boolean validate() {
+	public boolean activate() {
 		return containsID(Inventory.getItems(), emptyID)
 				&& !FOUNTAIN.contains(Players.getLocal().getLocation());
 	}
@@ -790,17 +804,13 @@ private class forcefillgui extends JFrame{
                 break;
         }
 
-		provide(new WalkToBank());
-		provide(new BankItems());
-		provide(new WalkToFountain());
-		
 		if(clay)
 		{
-			provide(new UseClayOnFountain());
-		}
+            strategies = new Node[]{new WalkToBank(), new BankItems(), new WalkToFountain(), new UseClayOnFountain()};
+        }
 		else
 		{
-			provide(new UseItemOnFountain());
+            strategies = new Node[]{new WalkToBank(), new BankItems(), new WalkToFountain(), new UseItemOnFountain()};
 		}
 		setVisible(false);
 
